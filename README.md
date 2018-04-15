@@ -1,4 +1,5 @@
 # DataMining1_NoShow
-For our Data Mining 1 Final Project: Predict medical appointment no-shows
+For our Data Mining 1 Final Project we will predict medical appointment no-shows based on data found at:
+https://www.kaggle.com/joniarroba/noshowappointments
 
-This is my test for pulling the readme back to my local repository
+The file DM_ProjectNoShow.R is the primary file that will run all other code.
