@@ -1,7 +1,13 @@
-#  Justin is testing changes
+# Data Mining 1: Final Project
+# Title: Project No Show
+# Group Members: 
+#     Gregh Rhodes
+#     Justin Scarborough
+# This project is due on 4/26/2018
 
+# Use this file to run the main program. Each group member
+# will create separate files to perform various data managemnet
+# tasks, but this file will be used to run our blocks of files
 
-#is this in the bug fix branch?
-#Test branch change
-#update for web
+## Main ##
 
