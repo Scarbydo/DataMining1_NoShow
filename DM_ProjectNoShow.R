@@ -22,8 +22,24 @@
   str(NoShowData)
   dim(NoShowData)
   
+  #check for missing data
+  sum(is.na(NoShowData$PatientId))
+  sum(is.na(NoShowData$AppointmentID))
+  sum(is.na(NoShowData$Gender))
+  sum(is.na(NoShowData$ScheduledDay))
+  sum(is.na(NoShowData$AppointmentDay))
+  sum(is.na(NoShowData$Age))
+  sum(is.na(NoShowData$Neighbourhood))
+  sum(is.na(NoShowData$Scholarship))
+  sum(is.na(NoShowData$Hipertension))
+  sum(is.na(NoShowData$Diabetes))
+  sum(is.na(NoShowData$Alcoholism))
+  sum(is.na(NoShowData$Handcap))
+  sum(is.na(NoShowData$SMS_received))
+  sum(is.na(NoShowData$`No-show`))
+  
   
   # examin correlation between variables using pairs()
-  
+  length(NoShowData$PatientId)
   
 # Performance measure: use F-Score
