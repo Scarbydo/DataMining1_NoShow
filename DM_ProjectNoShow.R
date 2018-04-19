@@ -11,3 +11,19 @@
 
 ## Main ##
 
+# Import Data
+  library(readr)
+  NoShowData <- read_csv("KaggleV2-May-2016.csv")
+  #View(NoShowData)
+
+# Data Exploration
+  typeof(NoShowData)
+  names(NoShowData)
+  str(NoShowData)
+  dim(NoShowData)
+  
+  
+  # examin correlation between variables using pairs()
+  
+  
+# Performance measure: use F-Score
