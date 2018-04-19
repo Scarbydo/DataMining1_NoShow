@@ -11,7 +11,6 @@
 
 ## Main ##
 
-<<<<<<< HEAD
 # Import Data
   library(readr)
   NoShowData <- read_csv("KaggleV2-May-2016.csv")
@@ -27,4 +26,4 @@
   # examin correlation between variables using pairs()
   
   
-=======
+# Performance measure: use F-Score
