@@ -14,40 +14,41 @@
 # Import Data
 library(readr)
 NoShowData <- read_csv("KaggleV2-May-2016.csv")
-#View(NoShowData)
   
 # Data Exploration
-typeof(NoShowData)
 names(NoShowData)
 str(NoShowData)
 dim(NoShowData)
 
-NoShowData$Gender <- as.factor(NoShowData$Gender)
-NoShowData$`No-show` <- as.factor(NoShowData$`No-show`)
 names(NoShowData) <- list("PatientId","AppointmentId","Gender","ScheduledDay","AppointmentDay","Age","Neighborhood","Scholarship","Hypertension","Diabetes","Alcoholism","Handicap","SmsReceived","NoShow")
 
-numUniqueNeighborhoods <- length(unique(NoShowData$Neighborhood))
-# 81 of the 110527 are unique. factorize it?
+# check for missing data
+sapply(NoShowData, function(x) sum(is.na(x)))
 
-#check for missing data
-sum(is.na(NoShowData$PatientId))
-sum(is.na(NoShowData$AppointmentId))
-sum(is.na(NoShowData$Gender))
-sum(is.na(NoShowData$ScheduledDay))
-sum(is.na(NoShowData$AppointmentDay))
-sum(is.na(NoShowData$Age))
-sum(is.na(NoShowData$Neighborhood))
-sum(is.na(NoShowData$Scholarship))
-sum(is.na(NoShowData$Hypertension))
-sum(is.na(NoShowData$Diabetes))
-sum(is.na(NoShowData$Alcoholism))
-sum(is.na(NoShowData$Handicap))
-sum(is.na(NoShowData$SmsReceived))
-sum(is.na(NoShowData$NoShow))
+# check for number of unique values in each column
+sapply(NoShowData, function(x) length(unique(x)))
 
+# 81 of the 110527 neighborhoods are unique. let's factorize it,
+# along with Gender and NoShow
+NoShowData$Neighborhood <- as.factor(NoShowData$Neighborhood)
+NoShowData$Gender <- as.factor(NoShowData$Gender)
+NoShowData$NoShow <- as.factor(NoShowData$NoShow)
+
+# appointment ID is not helpful
+NoShowData$AppointmentId <- NULL
+
+# we don't need the time in the SCheduleDay, so let's drop it
+NoShowData$ScheduledDay <- trunc(NoShowData$ScheduledDay, units='days')
+# create a new column with the difference between the day scheduled and the appointment day
+NoShowData['DaysScheduledAhead'] <- difftime(NoShowData$AppointmentDay, NoShowData$ScheduledDay, units='days')
+
+# need to see if there are outliers in DaysScheduledAhead and Age
+
+
+# splitting the data for training and testing
 trainSize <- floor(0.75 * nrow(NoShowData))
 set.seed(456)
-trainInds <- sample(seq_len(nrow(NoShowData)), size=trainingSetSize)
+trainInds <- sample(seq_len(nrow(NoShowData)), size=trainSize)
 train <- NoShowData[trainInds,]
 test <- NoShowData[-trainInds,]
 yColInd <- grep('NoShow', names(NoShowData))
@@ -60,3 +61,6 @@ testY <- test[yColInd]
 # I don't think we need to check this out, since we're categorical
 
 # Performance measure: use F-Score
+model <- glm(NoShow~., data=train, family=binomial(link='logit'))
+summary(model)
+anova(model, test='Chisq')
