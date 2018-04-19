@@ -11,3 +11,6 @@
 
 ## Main ##
 
+library(readr)
+NoShowData <- read_csv("KaggleV2-May-2016.csv")
+#View(NoShowData)
