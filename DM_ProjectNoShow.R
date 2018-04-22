@@ -67,13 +67,15 @@
   ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
   ##        Dropping the time in ScheduledDay does not cause the error.
   ##        We should find a way to exclude these.
-    
+  #NoShowData[NoShowData$DaysScheduledAhead < 0, ] #select rows with bad data
+      
   # Check age range to see if it makes sense
   range(NoShowData$Age)
   boxplot(NoShowData$Age~ NoShowData$NoShow)
   boxplot(NoShowData$Gender~ NoShowData$NoShow)
   ## ERROR: At least one age is Negative    
   ##        We should find a way to exclude that row.
+  #NoShowData[NoShowData$Age < 0, ] #select rows with bad data
   
   
 # visualize the data
