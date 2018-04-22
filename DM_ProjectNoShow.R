@@ -55,11 +55,18 @@
   # Appointment ID is not helpful, remove column
   NoShowData$AppointmentId <- NULL
   
+  # Check date ranges
+  range(NoShowData$ScheduledDay)
+  range(NoShowData$AppointmentDay)
+  # Create a new column with the difference between the day scheduled and the appointment day
+  NoShowData['DaysScheduledAhead'] <- difftime(NoShowData$AppointmentDay, NoShowData$ScheduledDay, units='days')
   # We don't need the time in the SCheduleDay, so let's drop it 
   NoShowData$ScheduledDay <- as.POSIXct(trunc(NoShowData$ScheduledDay, units='days'))
   
-  # Create a new column with the difference between the day scheduled and the appointment day
-  NoShowData['DaysScheduledAhead'] <- difftime(NoShowData$AppointmentDay, NoShowData$ScheduledDay, units='days')
+  # Create a new column for Appointment day of the week as an integer: 0=Sun, 1=Mon... 6=Sat
+  NoShowData$AptWDay <- as.POSIXlt(NoShowData$AppointmentDay)$wday #returns Sun - Sat as 0-6
+  # Alternative: df$day <- weekdays(as.Date(df$date)) # returns Sunday - Saturday
+  NoShowData$AptWDay <- as.factor(NoShowData$AptWDay)
   
   # Check age range to see if it makes sense
   range(NoShowData$Age)
@@ -86,7 +93,7 @@
   # Number of appointments per patient
   
   
-  # Bar Plots
+  # Bar Plots ######################
   # Compare NoShow = Yes vs. Noshow = No
   plot(NoShowData$Gender, NoShowData$NoShow, xlab='Gender', ylab='No Show?', main='No Shows Based on Gender')
   
@@ -105,20 +112,24 @@
   
   
   # Box Plots & Histograms: Are NoShows coming from a particular group?
-  barplot(order(table(NoShowData.Yes$Neighborhood)))
+  boxplot(table(NoShowData.Yes$Neighborhood))
   table(NoShowData.Yes$Neighborhood)
+
   
   # Day of week (any day that's bad)
+  barplot(NoShowData$AptWDay, NoShowData$NoShow, 
+          xlab="NoShow",
+          ylab='Appointment Day', 
+          main='Trend of NoShows by Day of Week') 
   
   # Month (any month that's bad)
   
-  # Neighborhood
-  boxplot(NoShowData$Age~ NoShowData$NoShow, ylab='Patient Age', xlab="NoShow")
-  
-  # NoShow = Yes and by difference in Appointment booked and Appointment time
-  # Number of appointments per patient & % no-show
-  hist()
-  
+  # Age vs. NoShow rate
+  boxplot(NoShowData$Age~ NoShowData$NoShow, 
+          xlab="NoShow",
+          ylab='Patient Age', 
+          main='Trend of NoShows by Patient Age')
+
   # DaysScheduledAhead vs. NoShow rate
   hist(as.integer(NoShowData.Yes$DaysScheduledAhead), breaks = 130)
   boxplot(as.integer(NoShowData$DaysScheduledAhead)~NoShowData$NoShow, 
