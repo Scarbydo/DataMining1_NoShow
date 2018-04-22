@@ -10,9 +10,11 @@
 # tasks, but this file will be used to run our blocks of files
 
 ## Main ##
+# Load libraries 
+library(dplyr) #include in case we want to convert to tbl
+library(readr)
 
 # Import Data
-library(readr)
 NoShowData <- read_csv("KaggleV2-May-2016.csv")
   
 # Data Exploration
@@ -80,6 +82,13 @@ plot(NoShowData$Diabetes, NoShowData$NoShow, xlab='Diabetes?', ylab='No Show?', 
 plot(NoShowData$Alcoholism, NoShowData$NoShow, xlab='Alcoholism?', ylab='No Show?', main='No Shows Based on Alcoholism')
 plot(NoShowData$Handicap, NoShowData$NoShow, xlab='Handicap?', ylab='No Show?', main='No Shows Based on Handicap')
 plot(NoShowData$SmsReceived, NoShowData$NoShow, xlab='SMS Received?', ylab='No Show?', main='No Shows Based on SMS Received')
+
+# visualization continued: Histograms - are no shows coming from a particular group?
+# NoShow = Yes and by neighborhood
+# NoShow = Yes and day of week
+# NoShow = Yes and month
+# NoShow = Yes and by age
+# NoShow = Yes and by difference in Appointment booked and Appointment time
 
 # See the counts of our categorical variables
 table(NoShowData$Gender)
