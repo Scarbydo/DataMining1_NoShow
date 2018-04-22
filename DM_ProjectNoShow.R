@@ -11,61 +11,81 @@
 
 ## Main ##
 # Load libraries 
-library(dplyr) #include in case we want to convert to tbl
-library(readr)
+library(dplyr)  # include in case we want to convert to tbl
+library(readr)  # include to read CSV files
+library(ggplot2)# include for nice visuals
 
 # Import Data
-NoShowData <- read_csv("KaggleV2-May-2016.csv")
+  NoShowData <- read_csv("KaggleV2-May-2016.csv")
+  # Example for reading one column
+  # SMSData <-read.csv("KaggleV2-May-2016.csv")[ ,c('SMS_received')] for reading one column
+
   
-# Data Exploration
-names(NoShowData)
-str(NoShowData)
-dim(NoShowData)
+# Initial Data Exploration
+  names(NoShowData)
+  str(NoShowData)
+  dim(NoShowData)
 
-names(NoShowData) <- list("PatientId","AppointmentId","Gender","ScheduledDay","AppointmentDay","Age","Neighborhood","Scholarship","Hypertension","Diabetes","Alcoholism","Handicap","SmsReceived","NoShow")
+# Data Cleaning
+  #Rename columns to more convenient variables
+  names(NoShowData) <- list("PatientId","AppointmentId","Gender","ScheduledDay","AppointmentDay","Age","Neighborhood","Scholarship","Hypertension","Diabetes","Alcoholism","Handicap","SmsReceived","NoShow")
+  
+  # check for missing data
+  sapply(NoShowData, function(x) sum(is.na(x)))
+  
+  # check for number of unique values in each column
+  sapply(NoShowData, function(x) length(unique(x)))
 
-# check for missing data
-sapply(NoShowData, function(x) sum(is.na(x)))
+  # 81 unique neighborhoods. let's factorize it,
+  # along with Gender (F/M) and NoShow (No=1  Yes=2)
+  NoShowData$Neighborhood <- as.factor(NoShowData$Neighborhood)
+  NoShowData$Gender <- as.factor(NoShowData$Gender)
+  NoShowData$NoShow <- as.factor(NoShowData$NoShow)
+  
+  # Factorize characteristics into yes/no
+  NoShowData$Scholarship <- as.factor(NoShowData$Scholarship)
+  NoShowData$Hypertension <- as.factor(NoShowData$Hypertension)
+  NoShowData$Diabetes <- as.factor(NoShowData$Diabetes)
+  NoShowData$Alcoholism <- as.factor(NoShowData$Alcoholism)
+  NoShowData$Handicap <- as.factor(NoShowData$Handicap)
+  NoShowData$SmsReceived <- as.factor(NoShowData$SmsReceived)
+  
+  # Appointment ID is not helpful, remove column
+  NoShowData$AppointmentId <- NULL
+  
+  # We don't need the time in the SCheduleDay, so let's drop it 
+  ### JUSTIN:
+  ### I think this is causing an error:
+  # NoShowData$ScheduledDay <- as.POSIXct(trunc(NoShowData$ScheduledDay, units='days'))
+  
+  # Create a new column with the difference between the day scheduled and the appointment day
+  NoShowData['DaysScheduledAhead'] <- difftime(NoShowData$AppointmentDay, NoShowData$ScheduledDay, units='days')
+  # Check Days Scheduled Ahead to see if the values make sense
+  hist(as.integer(NoShowData$DaysScheduledAhead))
+  table(as.integer(NoShowData$DaysScheduledAhead))
+  ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
+  ## We need to correct this.  Perhaps dropping the 
+  
+  
+  # Check age range to see if it makes sense
+  range(NoShowData$Age)
+  boxplot(NoShowData$Age~ NoShowData$NoShow)
+  boxplot(NoShowData$Gender~ NoShowData$NoShow)
+  
 
-# check for number of unique values in each column
-sapply(NoShowData, function(x) length(unique(x)))
-
-# 81 of the 110527 neighborhoods are unique. let's factorize it,
-# along with Gender and NoShow
-NoShowData$Neighborhood <- as.factor(NoShowData$Neighborhood)
-NoShowData$Gender <- as.factor(NoShowData$Gender)
-# No=1  Yes=2
-NoShowData$NoShow <- as.factor(NoShowData$NoShow)
-# We should probably turn these into yes/no
-NoShowData$Scholarship <- as.factor(NoShowData$Scholarship)
-NoShowData$Hypertension <- as.factor(NoShowData$Hypertension)
-NoShowData$Diabetes <- as.factor(NoShowData$Diabetes)
-NoShowData$Alcoholism <- as.factor(NoShowData$Alcoholism)
-NoShowData$Handicap <- as.factor(NoShowData$Handicap)
-NoShowData$SmsReceived <- as.factor(NoShowData$SmsReceived)
-
-# appointment ID is not helpful
-NoShowData$AppointmentId <- NULL
-
-# we don't need the time in the SCheduleDay, so let's drop it
-NoShowData$ScheduledDay <- as.POSIXct(trunc(NoShowData$ScheduledDay, units='days'))
-# create a new column with the difference between the day scheduled and the appointment day
-NoShowData['DaysScheduledAhead'] <- difftime(NoShowData$AppointmentDay, NoShowData$ScheduledDay, units='days')
-
-# need to see if there are outliers in DaysScheduledAhead and Age
-
+  
 
 # splitting the data for training and testing
-trainSize <- floor(0.75 * nrow(NoShowData))
-set.seed(456)
-trainInds <- sample(seq_len(nrow(NoShowData)), size=trainSize)
-train <- NoShowData[trainInds,]
-test <- NoShowData[-trainInds,]
-yColInd <- grep('NoShow', names(NoShowData))
-trainX <- train[-yColInd]
-trainY <- train[yColInd]
-testX <- test[-yColInd]
-testY <- test[yColInd]
+  trainSize <- floor(0.75 * nrow(NoShowData))
+  set.seed(456)
+  trainInds <- sample(seq_len(nrow(NoShowData)), size=trainSize)
+  train <- NoShowData[trainInds,]
+  test <- NoShowData[-trainInds,]
+  yColInd <- grep('NoShow', names(NoShowData))
+  trainX <- train[-yColInd]
+  trainY <- train[yColInd]
+  testX <- test[-yColInd]
+  testY <- test[yColInd]
 
 # examine correlation between variables using pairs()
 # I don't think we need to check this out, since we're categorical
@@ -84,11 +104,12 @@ plot(NoShowData$Handicap, NoShowData$NoShow, xlab='Handicap?', ylab='No Show?', 
 plot(NoShowData$SmsReceived, NoShowData$NoShow, xlab='SMS Received?', ylab='No Show?', main='No Shows Based on SMS Received')
 
 # visualization continued: Histograms - are no shows coming from a particular group?
-# NoShow = Yes and by neighborhood
-# NoShow = Yes and day of week
-# NoShow = Yes and month
-# NoShow = Yes and by age
-# NoShow = Yes and by difference in Appointment booked and Appointment time
+  # NoShow = Yes and by neighborhood
+  # NoShow = Yes and day of week
+  # NoShow = Yes and month
+  # NoShow = Yes and by age
+  # NoShow = Yes and by difference in Appointment booked and Appointment time
+  # Number of appointments per patient & % no-show
 
 # See the counts of our categorical variables
 table(NoShowData$Gender)
