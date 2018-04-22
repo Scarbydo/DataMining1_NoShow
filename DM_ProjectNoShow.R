@@ -61,32 +61,41 @@
   # Create a new column with the difference between the day scheduled and the appointment day
   NoShowData['DaysScheduledAhead'] <- difftime(NoShowData$AppointmentDay, NoShowData$ScheduledDay, units='days')
   
-  # Check Days Scheduled Ahead to see if the values make sense
-  hist(as.integer(NoShowData$DaysScheduledAhead), breaks = 130)
-  table(as.integer(NoShowData$DaysScheduledAhead))
-  ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
-  ##        Dropping the time in ScheduledDay does not cause the error.
-  ##        We should find a way to exclude these.
-  #NoShowData[NoShowData$DaysScheduledAhead < 0, ] #select rows with bad data
-      
   # Check age range to see if it makes sense
   range(NoShowData$Age)
-  boxplot(NoShowData$Age~ NoShowData$NoShow)
-  boxplot(NoShowData$Gender~ NoShowData$NoShow)
+  NoShowData[NoShowData$Age < 0, ] #select rows with bad data
   ## ERROR: At least one age is Negative    
-  ##        We should find a way to exclude that row.
-  #NoShowData[NoShowData$Age < 0, ] #select rows with bad data
+  ##        Exclude that row.  Example row removal: d<-d[!(d$A=="B" & d$E==0),]
+  NoShowData <- NoShowData[NoShowData$Age >= 0, ]
+  
+  # Check Days Scheduled Ahead to see if the values make sense
+  table(as.integer(NoShowData$DaysScheduledAhead))
+  NoShowData[NoShowData$DaysScheduledAhead < 0, ] #select rows with bad data
+  ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
+  ##        Dropping the time in ScheduledDay does not cause the error.
+  ##        Exclude these any appointment scheduled after the appointment occurred.
+  NoShowData <- NoShowData[NoShowData$DaysScheduledAhead >= 0, ]
   
   
 # visualize the data
+  # Try to look for trends in NoShow Data, so create new data set.
+  NoShowData.Yes = NoShowData[NoShowData$NoShow == "Yes",]
+  
+  # Aggregate data by groups?
+  # Number of appoinments by neighborhood
+  # Number of appointments per patient
+  
+  
+  # Bar Plots
+  # Compare NoShow = Yes vs. Noshow = No
   plot(NoShowData$Gender, NoShowData$NoShow, xlab='Gender', ylab='No Show?', main='No Shows Based on Gender')
   
-  ## JUSTIN: This plot is not very effictive.  Maybe a histogram or boxplot of noshows by Days Scheduled Ahead is better
+  ## JUSTIN: These plots are not very effictive.  Maybe a histogram or boxplot of noshows by Days Scheduled Ahead is better
   plot(NoShowData$DaysScheduledAhead, NoShowData$NoShow, yaxt='n', ylim=c(0.5,2.5), xlab='Days Scheduled Ahead', ylab='No Show?', main='No Shows Based on Advanced Schedule Days')
   axis(2, at=c(1,2), labels=c('No','Yes'))
-  
   plot(NoShowData$Age, NoShowData$NoShow, yaxt='n', ylim=c(0.5,2.5), xlab='Patient Age', ylab='No Show?', main='No Shows Based on Age')
   axis(2, at=c(1,2), labels=c('No','Yes'))
+
   plot(NoShowData$Scholarship, NoShowData$NoShow, xlab='Scholarship?', ylab='No Show?', main='No Shows Based on Scholarship')
   plot(NoShowData$Hypertension, NoShowData$NoShow, xlab='Hypertension?', ylab='No Show?', main='No Shows Based on Hypertension')
   plot(NoShowData$Diabetes, NoShowData$NoShow, xlab='Diabetes?', ylab='No Show?', main='No Shows Based on Diabetes')
@@ -94,23 +103,38 @@
   plot(NoShowData$Handicap, NoShowData$NoShow, xlab='Handicap?', ylab='No Show?', main='No Shows Based on Handicap')
   plot(NoShowData$SmsReceived, NoShowData$NoShow, xlab='SMS Received?', ylab='No Show?', main='No Shows Based on SMS Received')
   
-  # visualization continued: Histograms - are no shows coming from a particular group?
-  # NoShow = Yes and by neighborhood
+  
+  # Histograms: Are NoShows coming from a particular group?
+  barplot(order(table(NoShowData.Yes$Neighborhood)))
+  table(NoShowData.Yes$Neighborhood)
+  
   # NoShow = Yes and day of week
+  
   # NoShow = Yes and month
+  
   # NoShow = Yes and by age
+  boxplot(NoShowData$Age~ NoShowData$NoShow, ylab='Patient Age', xlab="NoShow")
+  
   # NoShow = Yes and by difference in Appointment booked and Appointment time
   # Number of appointments per patient & % no-show
-  # Look at DaysScheduledAhead vs. No show rate
+  hist()
   
+  # Look at DaysScheduledAhead vs. NoShow rate
+  hist(as.integer(NoShowData.Yes$DaysScheduledAhead), breaks = 130)
+  boxplot(as.integer(NoShowData$DaysScheduledAhead)~NoShowData$NoShow, 
+          xlab="NoShow",
+          ylab='Days Appointment Scheduled In Advance', 
+          main='Trend of NoShows by Schedule')
+  
+    
   # See the counts of our categorical variables
-  table(NoShowData$Gender)
-  table(NoShowData$Scholarship)
-  table(NoShowData$Hypertension)
-  table(NoShowData$Diabetes)
-  table(NoShowData$Alcoholism)
-  table(NoShowData$Handicap)
-  table(NoShowData$SmsReceived)
+  counts.Gender <- table(NoShowData$Gender)
+  counts.Scholarship <- table(NoShowData$Scholarship)
+  counts.Hypertension <- table(NoShowData$Hypertension)
+  counts.Diabetes <- table(NoShowData$Diabetes)
+  counts.Alcoholism <- table(NoShowData$Alcoholism)
+  counts.Handicap <- table(NoShowData$Handicap)
+  counts.SmsReceived <- table(NoShowData$SmsReceived)
   # The skewed counts might mean something...
   
 
