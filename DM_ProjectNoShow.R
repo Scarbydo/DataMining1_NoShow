@@ -104,22 +104,22 @@
   plot(NoShowData$SmsReceived, NoShowData$NoShow, xlab='SMS Received?', ylab='No Show?', main='No Shows Based on SMS Received')
   
   
-  # Histograms: Are NoShows coming from a particular group?
+  # Box Plots & Histograms: Are NoShows coming from a particular group?
   barplot(order(table(NoShowData.Yes$Neighborhood)))
   table(NoShowData.Yes$Neighborhood)
   
-  # NoShow = Yes and day of week
+  # Day of week (any day that's bad)
   
-  # NoShow = Yes and month
+  # Month (any month that's bad)
   
-  # NoShow = Yes and by age
+  # Neighborhood
   boxplot(NoShowData$Age~ NoShowData$NoShow, ylab='Patient Age', xlab="NoShow")
   
   # NoShow = Yes and by difference in Appointment booked and Appointment time
   # Number of appointments per patient & % no-show
   hist()
   
-  # Look at DaysScheduledAhead vs. NoShow rate
+  # DaysScheduledAhead vs. NoShow rate
   hist(as.integer(NoShowData.Yes$DaysScheduledAhead), breaks = 130)
   boxplot(as.integer(NoShowData$DaysScheduledAhead)~NoShowData$NoShow, 
           xlab="NoShow",
@@ -128,13 +128,15 @@
   
     
   # See the counts of our categorical variables
-  counts.Gender <- table(NoShowData$Gender)
-  counts.Scholarship <- table(NoShowData$Scholarship)
-  counts.Hypertension <- table(NoShowData$Hypertension)
-  counts.Diabetes <- table(NoShowData$Diabetes)
-  counts.Alcoholism <- table(NoShowData$Alcoholism)
-  counts.Handicap <- table(NoShowData$Handicap)
-  counts.SmsReceived <- table(NoShowData$SmsReceived)
+  dataCounts = list()
+  dataCounts$Gender <- table(NoShowData$Gender)
+  dataCounts$Scholarship <- table(NoShowData$Scholarship)
+  dataCounts$Hypertension <- table(NoShowData$Hypertension)
+  dataCounts$Diabetes <- table(NoShowData$Diabetes)
+  dataCounts$Alcoholism <- table(NoShowData$Alcoholism)
+  dataCounts$Handicap <- table(NoShowData$Handicap)
+  dataCounts$SmsReceived <- table(NoShowData$SmsReceived)
+  dataCounts
   # The skewed counts might mean something...
   
 
