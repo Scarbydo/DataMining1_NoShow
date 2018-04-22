@@ -11,9 +11,10 @@
 
 ## Main ##
 # Load libraries 
-library(dplyr)  # include in case we want to convert to tbl. See DataCamp Tutorial
-library(readr)  # include to read CSV files
-library(ggplot2)# include for nice visuals
+  library(dplyr)  # include in case we want to convert to tbl. See DataCamp Tutorial
+  library(readr)  # include to read CSV files
+  library(ggplot2)# include for nice visuals
+
 
 # Import Data
   NoShowData <- read_csv("KaggleV2-May-2016.csv")
@@ -26,6 +27,7 @@ library(ggplot2)# include for nice visuals
   str(NoShowData)
   dim(NoShowData)
 
+  
 # Data Cleaning
   #Rename columns to more convenient variables
   names(NoShowData) <- list("PatientId","AppointmentId","Gender","ScheduledDay","AppointmentDay","Age","Neighborhood","Scholarship","Hypertension","Diabetes","Alcoholism","Handicap","SmsReceived","NoShow")
@@ -65,15 +67,15 @@ library(ggplot2)# include for nice visuals
   ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
   ##        Dropping the time in ScheduledDay does not cause the error.
   ##        We should find a way to exclude these.
-  # Compare
-
     
   # Check age range to see if it makes sense
   range(NoShowData$Age)
   boxplot(NoShowData$Age~ NoShowData$NoShow)
   boxplot(NoShowData$Gender~ NoShowData$NoShow)
+  ## ERROR: At least one age is Negative    
+  ##        We should find a way to exclude that row.
   
-
+  
 # visualize the data
   plot(NoShowData$Gender, NoShowData$NoShow, xlab='Gender', ylab='No Show?', main='No Shows Based on Gender')
   
@@ -121,9 +123,6 @@ library(ggplot2)# include for nice visuals
   trainY <- train[yColInd]
   testX <- test[-yColInd]
   testY <- test[yColInd]
-
-# examine correlation between variables using pairs()
-# I don't think we need to check this out, since we're categorical
 
 
 # JUSTIN: 
