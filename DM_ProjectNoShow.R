@@ -76,12 +76,13 @@
   NoShowData <- NoShowData[NoShowData$Age >= 0, ]
   
   # Check Days Scheduled Ahead to see if the values make sense
-  table(as.integer(NoShowData$DaysScheduledAhead))
-  NoShowData[NoShowData$DaysScheduledAhead < 0, ] #select rows with bad data
+  table(as.integer(NoShowData$DaysScheduledAhead[NoShowData$DaysScheduledAhead< 0]))
+  NoShowData[NoShowData$DaysScheduledAhead <= -1, ] #select rows with bad data
+  ## NOTE: selecting < 0 was including zero in the results because it's a doulbe value
   ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
   ##        Dropping the time in ScheduledDay does not cause the error.
   ##        Exclude these any appointment scheduled after the appointment occurred.
-  NoShowData <- NoShowData[NoShowData$DaysScheduledAhead >= 0, ]
+  NoShowData <- NoShowData[NoShowData$DaysScheduledAhead > -1, ]
   
   
 # visualize the data
