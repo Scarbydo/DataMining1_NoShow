@@ -11,6 +11,7 @@
 
 ## Main ##
 # Load libraries 
+  #install.packages("tidyverse") # alternate way to get dplyr
   library(dplyr)  # include in case we want to convert to tbl. See DataCamp Tutorial
   library(readr)  # include to read CSV files
   library(ggplot2)# include for nice visuals
@@ -65,7 +66,8 @@
   
   # Create a new column for Appointment day of the week as an integer: 0=Sun, 1=Mon... 6=Sat
   NoShowData$AptWDay <- as.POSIXlt(NoShowData$AppointmentDay)$wday #returns Sun - Sat as 0-6
-  # Alternative: df$day <- weekdays(as.Date(df$date)) # returns Sunday - Saturday
+  # Alternative: 
+  #   NoShowData$AptWDay <- weekdays(as.Date(NoShowData$AptWDay)) # returns Sunday - Saturday
   NoShowData$AptWDay <- as.factor(NoShowData$AptWDay)
   
   # Check age range to see if it makes sense
@@ -77,22 +79,42 @@
   
   # Check Days Scheduled Ahead to see if the values make sense
   table(as.integer(NoShowData$DaysScheduledAhead[NoShowData$DaysScheduledAhead< 0]))
+  ## NOTE: We should consider excluding same-day appointments, ~38k with zero days 
+  ##       advance notice.
+  
   NoShowData[NoShowData$DaysScheduledAhead <= -1, ] #select rows with bad data
   ## NOTE: selecting < 0 was including zero in the results because it's a doulbe value
   ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
   ##        Dropping the time in ScheduledDay does not cause the error.
   ##        Exclude these any appointment scheduled after the appointment occurred.
   NoShowData <- NoShowData[NoShowData$DaysScheduledAhead > -1, ]
-  
+
   
 # visualize the data
-  # Try to look for trends in NoShow Data, so create new data set.
-  NoShowData.Yes = NoShowData[NoShowData$NoShow == "Yes",]
+  #Create to Data Frame using dplyr
+  NoShowData_df <- tbl_df(NoShowData)
+  
+  # See the counts of our categorical variables
+  dataCounts = list()
+  dataCounts$Gender <- table(NoShowData$Gender)
+  dataCounts$Scholarship <- table(NoShowData$Scholarship)
+  dataCounts$Hypertension <- table(NoShowData$Hypertension)
+  dataCounts$Diabetes <- table(NoShowData$Diabetes)
+  dataCounts$Alcoholism <- table(NoShowData$Alcoholism)
+  dataCounts$Handicap <- table(NoShowData$Handicap)
+  dataCounts$SmsReceived <- table(NoShowData$SmsReceived)
+  dataCounts$AptWDay <- table(NoShowData$AptWDay)
+  dataCounts                                
+  
   
   # Aggregate data by groups?
-  # Number of appoinments by neighborhood
+  # Number of appointments by neighborhood
   # Number of appointments per patient
-  
+  table(NoShowData$PatientId)
+  barplot(table(NoShowData$PatientId), 
+          xlab="Patient ID", 
+          ylab="# of Appointments",
+          main="# of Appointments per patient")  
   
   # Bar Plots ######################
   # Compare NoShow = Yes vs. Noshow = No
@@ -113,8 +135,8 @@
   
   
   # Box Plots & Histograms: Are NoShows coming from a particular group?
-  boxplot(table(NoShowData.Yes$Neighborhood))
-  table(NoShowData.Yes$Neighborhood)
+  barplot(table(NoShowData$Neighborhood))
+  table(NoShowData$Neighborhood[NoShowData$NoShow=='Yes'])
 
   
   # Day of week (any day that's bad)
@@ -139,17 +161,7 @@
           main='Trend of NoShows by Schedule')
   
     
-  # See the counts of our categorical variables
-  dataCounts = list()
-  dataCounts$Gender <- table(NoShowData$Gender)
-  dataCounts$Scholarship <- table(NoShowData$Scholarship)
-  dataCounts$Hypertension <- table(NoShowData$Hypertension)
-  dataCounts$Diabetes <- table(NoShowData$Diabetes)
-  dataCounts$Alcoholism <- table(NoShowData$Alcoholism)
-  dataCounts$Handicap <- table(NoShowData$Handicap)
-  dataCounts$SmsReceived <- table(NoShowData$SmsReceived)
-  dataCounts
-  # The skewed counts might mean something...
+
   
 
 # Splitting the data for training and testing
