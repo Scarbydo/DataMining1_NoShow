@@ -138,14 +138,12 @@
   barplot(table(NoShowData$Neighborhood))
   table(NoShowData$Neighborhood[NoShowData$NoShow=='Yes'])
 
-  
   # Day of week (any day that's bad)
+  table(NoShowData$AptWDay)
   barplot(NoShowData$AptWDay, NoShowData$NoShow, 
           xlab="NoShow",
           ylab='Appointment Day', 
           main='Trend of NoShows by Day of Week') 
-  
-  # Month (any month that's bad)
   
   # Age vs. NoShow rate
   boxplot(NoShowData$Age~ NoShowData$NoShow, 
@@ -154,7 +152,7 @@
           main='Trend of NoShows by Patient Age')
 
   # DaysScheduledAhead vs. NoShow rate
-  hist(as.integer(NoShowData.Yes$DaysScheduledAhead), breaks = 130)
+  hist(as.integer(NoShowData[NoShowData$NoShow=='No',]$DaysScheduledAhead), breaks = 130)
   boxplot(as.integer(NoShowData$DaysScheduledAhead)~NoShowData$NoShow, 
           xlab="NoShow",
           ylab='Days Appointment Scheduled In Advance', 
@@ -184,3 +182,12 @@
 model <- glm(NoShow~., data=train, family=binomial(link='logit'))
 summary(model)
 anova(model, test='Chisq')
+
+# Forward / Backward Step Selection
+
+# variable selection
+  #rigde
+  #lasso
+  #elastic net
+  
+#KNN?
