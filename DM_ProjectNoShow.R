@@ -60,15 +60,14 @@
   range(NoShowData$ScheduledDay)
   range(NoShowData$AppointmentDay)
   # Create a new column with the difference between the day scheduled and the appointment day
-  NoShowData['DaysScheduledAhead'] <- difftime(NoShowData$AppointmentDay, NoShowData$ScheduledDay, units='days')
-  # We don't need the time in the SCheduleDay, so let's drop it 
-  NoShowData$ScheduledDay <- as.POSIXct(trunc(NoShowData$ScheduledDay, units='days'))
+  NoShowData['DaysScheduledAhead'] <- as.integer(difftime(as.POSIXct(NoShowData$AppointmentDay), trunc.POSIXt(as.POSIXct(NoShowData$ScheduledDay), units='days'), units='days'))
   
   # Create a new column for Appointment day of the week as an integer: 0=Sun, 1=Mon... 6=Sat
-  NoShowData$AptWDay <- as.POSIXlt(NoShowData$AppointmentDay)$wday #returns Sun - Sat as 0-6
-  # Alternative: 
-  #   NoShowData$AptWDay <- weekdays(as.Date(NoShowData$AptWDay)) # returns Sunday - Saturday
-  NoShowData$AptWDay <- as.factor(NoShowData$AptWDay)
+  NoShowData['AptWDay'] <- as.factor(as.POSIXlt(NoShowData$AppointmentDay)$wday) #returns Sun - Sat as 0-6
+
+  # Drop these two columns because we don't need them anymore
+  # NoShowData$ScheduledDay <- NULL
+  # NoShowData$AppointmentDay <- NULL
   
   # Check age range to see if it makes sense
   range(NoShowData$Age)
@@ -78,16 +77,16 @@
   NoShowData <- NoShowData[NoShowData$Age >= 0, ]
   
   # Check Days Scheduled Ahead to see if the values make sense
-  table(as.integer(NoShowData$DaysScheduledAhead[NoShowData$DaysScheduledAhead< 0]))
+  table(NoShowData$DaysScheduledAhead[NoShowData$DaysScheduledAhead < 0])
   ## NOTE: We should consider excluding same-day appointments, ~38k with zero days 
   ##       advance notice.
   
-  NoShowData[NoShowData$DaysScheduledAhead <= -1, ] #select rows with bad data
+  NoShowData[NoShowData$DaysScheduledAhead < 0, ] #select rows with bad data
   ## NOTE: selecting < 0 was including zero in the results because it's a doulbe value
   ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
   ##        Dropping the time in ScheduledDay does not cause the error.
   ##        Exclude these any appointment scheduled after the appointment occurred.
-  NoShowData <- NoShowData[NoShowData$DaysScheduledAhead > -1, ]
+  NoShowData <- NoShowData[NoShowData$DaysScheduledAhead >= 0, ]
 
   
 # visualize the data
@@ -170,24 +169,99 @@
   test <- NoShowData[-trainInds,]
   yColInd <- grep('NoShow', names(NoShowData))
   trainX <- train[-yColInd]
-  trainY <- train[yColInd]
+  trainY <- train[[yColInd]]
   testX <- test[-yColInd]
-  testY <- test[yColInd]
+  testY <- test[[yColInd]]
+
+# Define functions to calculate F1 score
+  TP <- function(predictions, actual) {
+    return(sum((predictions == 'Yes') & actual == 'Yes'))
+  }
+  
+  TN <- function(predictions, actual) {
+    return(sum((predictions == 'No') & actual == 'No'))
+  }
+  
+  FP <- function(predictions, actual) {
+    return(sum((predictions == 'Yes') & actual == 'No'))
+  }
+  
+  FN <- function(predictions, actual) {
+    return(sum((predictions == 'No') & actual == 'Yes'))
+  }
+  
+  Recall <- function(predictions, actual) {
+    tp <- TP(predictions, actual)
+    return(tp/(tp + FN(predictions, actual)))
+  }
+  
+  Precision <- function(predictions, actual) {
+    tp <- TP(predictions, actual)
+    return(tp/(tp + FP(predictions, actual)))
+  }
+  
+  F1 <- function(predictions, actual) {
+    return(2/(1/Recall(predictions, actual) + (1/Precision(predictions, actual))))
+  }
+  
+
+############################################################################
+# LOGISTIC REGRESSION
+model_logreg <- glm(NoShow~., data=train, family=binomial(link='logit'))
+summary(model_logreg)
+
+# based on the results from the summary above, we select only significant predictors
+model_logreg <- glm(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=train, family=binomial(link='logit'))
+# what do these plots tell us?
+plot(model_logreg)
+
+predict_logreg <- predict(model_logreg, testX, type="response")
+
+# see how the logist regression performed
+predict_logreg <- cut(predict_logreg, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
+
+# Confusion matrix for logistic regression
+table(testY, predict_logreg, dnn=c("actual", "predicted"))
+# F1 score for logistic regression
+f1_logreg <- F1(predict_logreg, testY)
 
 
-# JUSTIN: 
-  #  Agree GLM logit is best for classification
-  #  Should we use LASSO or RIDGE to select variables for our model?
-# Performance measure: use F-Score
-model <- glm(NoShow~., data=train, family=binomial(link='logit'))
-summary(model)
-anova(model, test='Chisq')
+############################################################################
+# RIDGE REGRESSION
+library(glmnet)
+xRidgeTrain <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=train)
+yRidgeTrain <- as.factor(train$NoShow)
+model_ridge <- glmnet(xRidgeTrain, yRidgeTrain, alpha=0, lambda=10^seq(10, -2, length=100), family="binomial")
+cv.ridge <- cv.glmnet(xRidgeTrain, yRidgeTrain, alpha=0, family="binomial")
+bestRidgeLambda <- cv.ridge$lambda.min
+xRidgeTest <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
+predict_ridge <- predict(model_ridge, alpha=0, s=bestRidgeLambda, newx=xRidgeTest)
+predict_ridge <- cut(predict_ridge, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
 
-# Forward / Backward Step Selection
+# Confusion matrix for logistic regression
+table(testY, predict_ridge, dnn=c("actual", "predicted"))
+# F1 score for logistic regression
+f1_ridge <- F1(predict_ridge, testY)
 
-# variable selection
-  #rigde
-  #lasso
-  #elastic net
+
+############################################################################
+# LASSO REGRESSION
+xLassoTrain <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=train)
+yLassoTrain <- as.factor(train$NoShow)
+model_lasso <- glmnet(xLassoTrain, yLassoTrain, alpha=1, lambda=10^seq(10, -2, length=100), family="binomial")
+cv.lasso <- cv.glmnet(xLassoTrain, yLassoTrain, alpha=1, family="binomial")
+bestLassoLambda <- cv.lasso$lambda.min
+xLassoTest <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
+predict_lasso <- predict(model_lasso, alpha=1, s=bestLassoLambda, newx=xLassoTest)
+predict_lasso <- cut(predict_lasso, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
+
+# Confusion matrix for logistic regression
+table(testY, predict_lasso, dnn=c("actual", "predicted"))
+# F1 score for logistic regression
+f1_lasso <- F1(predict_lasso, testY)
+
+############################################################################
+# LASSO REGRESSION
+
   
 #KNN?
