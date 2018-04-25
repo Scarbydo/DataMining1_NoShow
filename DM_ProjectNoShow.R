@@ -105,15 +105,30 @@
   dataCounts$AptWDay <- table(NoShowData$AptWDay)
   dataCounts                                
   
-  
-  # Aggregate data by groups?
   # Number of appointments by neighborhood
+  #table(NoShowData$NoShow, NoShowData$Neighborhood)
+  barplot(table(NoShowData$NoShow, NoShowData$Neighborhood), 
+          ylim=c(0,1000+max(table(NoShowData$Neighborhood))),
+          las=2,
+          cex.names=0.4,
+          space = .8,
+          col=c("grey","red"),
+          ylab="# of Appointments") #las = rotation of x labels, cex = fontsize, space = dist btw cols
+  legend("topright", 
+         fill =c("grey","red"), 
+         legend = c("NoShow=No","NoShow=Yes"))
+  
   # Number of appointments per patient
-  table(NoShowData$PatientId)
-  barplot(table(NoShowData$PatientId), 
+  aptsPerPatient = table(NoShowData$NoShow, NoShowData$PatientId)
+  barplot(table(NoShowData$NoShow, NoShowData$PatientId), 
+          ylim=c(0,10+max(table(NoShowData$PatientId))),
+          las=2,
           xlab="Patient ID", 
           ylab="# of Appointments",
           main="# of Appointments per patient")  
+  # legend("topright", 
+  #        fill =c("grey","red"), 
+  #        legend = c("NoShow=No","NoShow=Yes"))
   
   # Bar Plots ######################
   # Compare NoShow = Yes vs. Noshow = No
