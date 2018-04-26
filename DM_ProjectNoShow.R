@@ -188,21 +188,26 @@
   testX <- test[-yColInd]
   testY <- test[[yColInd]]
 
+  # different format for the glmnet models
+  xTrain <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=train)
+  yTrain <- as.factor(train$NoShow)
+  xTest <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
+
 # Define functions to calculate F1 score
   TP <- function(predictions, actual) {
-    return(sum((predictions == 'Yes') & actual == 'Yes'))
+    return(sum((predictions == 'Yes') & (actual == 'Yes')))
   }
   
   TN <- function(predictions, actual) {
-    return(sum((predictions == 'No') & actual == 'No'))
+    return(sum((predictions == 'No') & (actual == 'No')))
   }
   
   FP <- function(predictions, actual) {
-    return(sum((predictions == 'Yes') & actual == 'No'))
+    return(sum((predictions == 'Yes') & (actual == 'No')))
   }
   
   FN <- function(predictions, actual) {
-    return(sum((predictions == 'No') & actual == 'Yes'))
+    return(sum((predictions == 'No') & (actual == 'Yes')))
   }
   
   Recall <- function(predictions, actual) {
@@ -241,42 +246,60 @@ table(testY, predict_logreg, dnn=c("actual", "predicted"))
 f1_logreg <- F1(predict_logreg, testY)
 
 
+
 ############################################################################
 # RIDGE REGRESSION
 library(glmnet)
-xRidgeTrain <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=train)
-yRidgeTrain <- as.factor(train$NoShow)
-model_ridge <- glmnet(xRidgeTrain, yRidgeTrain, alpha=0, lambda=10^seq(10, -2, length=100), family="binomial")
-cv.ridge <- cv.glmnet(xRidgeTrain, yRidgeTrain, alpha=0, family="binomial")
+model_ridge <- glmnet(xTrain, yTrain, alpha=0, lambda=10^seq(10, -2, length=100), family="binomial")
+cv.ridge <- cv.glmnet(xTrain, yTrain, alpha=0, family="binomial")
 bestRidgeLambda <- cv.ridge$lambda.min
-xRidgeTest <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
-predict_ridge <- predict(model_ridge, alpha=0, s=bestRidgeLambda, newx=xRidgeTest)
+predict_ridge <- predict(model_ridge, alpha=0, s=bestRidgeLambda, newx=xTest)
 predict_ridge <- cut(predict_ridge, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
 
-# Confusion matrix for logistic regression
+# Confusion matrix for ridge regression
 table(testY, predict_ridge, dnn=c("actual", "predicted"))
-# F1 score for logistic regression
+# F1 score for ridge regression
 f1_ridge <- F1(predict_ridge, testY)
 
 
 ############################################################################
 # LASSO REGRESSION
-xLassoTrain <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=train)
-yLassoTrain <- as.factor(train$NoShow)
-model_lasso <- glmnet(xLassoTrain, yLassoTrain, alpha=1, lambda=10^seq(10, -2, length=100), family="binomial")
-cv.lasso <- cv.glmnet(xLassoTrain, yLassoTrain, alpha=1, family="binomial")
+model_lasso <- glmnet(xTrain, yTrain, alpha=1, lambda=10^seq(10, -2, length=100), family="binomial")
+cv.lasso <- cv.glmnet(xTrain, yTrain, alpha=1, family="binomial")
 bestLassoLambda <- cv.lasso$lambda.min
-xLassoTest <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
-predict_lasso <- predict(model_lasso, alpha=1, s=bestLassoLambda, newx=xLassoTest)
+predict_lasso <- predict(model_lasso, alpha=1, s=bestLassoLambda, newx=xTest)
 predict_lasso <- cut(predict_lasso, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
 
-# Confusion matrix for logistic regression
+# Confusion matrix for lasso regression
 table(testY, predict_lasso, dnn=c("actual", "predicted"))
-# F1 score for logistic regression
+# F1 score for lasso regression
 f1_lasso <- F1(predict_lasso, testY)
 
-############################################################################
-# LASSO REGRESSION
 
-  
-#KNN?
+############################################################################
+# ELASTIC NET REGRESSION
+elasticF1s <- c()
+for (i in seq(0, 1, by=0.1)) {
+  fElasticRegression <- glmnet(xTrain, yTrain, alpha=i, lambda=10^seq(10, -2, length = 100), family='binomial')
+  cv.elastic <- cv.glmnet(xTrain, yTrain, alpha=i, family='binomial')
+  bestElasticLambda <- cv.elastic$lambda.min
+  fPredictions <- predict(fElasticRegression, alpha=i, s=bestElasticLambda, newx=xTest)
+  fPredictions <- cut(fPredictions, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
+  f1 <- F1(fPredictions, testY)
+  elasticF1s <- c(elasticF1s, f1)
+}
+
+minElasticF1 <- min(elasticF1s)
+indexOfMinF1 <- match(minElasticF1, elasticF1s)
+elasticAlpha <- seq(0.1,0.9,by=0.1)[indexOfMinF1]
+
+fElasticRegression <- glmnet(xTrain, yTrain, alpha=elasticAlpha, lambda=10^seq(10, -2, length = 100), family='binomial')
+cv.elastic <- cv.glmnet(xTrain, yTrain, alpha=elasticAlpha, family='binomial')
+bestElasticLambda <- cv.elastic$lambda.min
+predict_elastic <- predict(fElasticRegression, alpha=elasticAlpha, s=bestElasticLambda, newx=xTest)
+predict_elastic <- cut(predict_elastic, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
+
+# Confusion matrix for elastic regression
+table(testY, predict_elastic, dnn=c("actual", "predicted"))
+# F1 score for elastic regression
+f1_elastic <- F1(predict_elastic, testY)
