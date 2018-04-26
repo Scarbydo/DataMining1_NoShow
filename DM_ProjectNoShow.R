@@ -119,16 +119,16 @@
          legend = c("NoShow=No","NoShow=Yes"))
   
   # Number of appointments per patient
-  aptsPerPatient = table(NoShowData$NoShow, NoShowData$PatientId)
-  barplot(table(NoShowData$NoShow, NoShowData$PatientId), 
-          ylim=c(0,10+max(table(NoShowData$PatientId))),
-          las=2,
+  aptsPerPatient = table(NoShowData$PatientId)
+  aptsPerPatient = sort(aptsPerPatient, decreasing = T)
+  mostappointments = as.integer(max(table(NoShowData$PatientId)))
+  barplot(aptsPerPatient, 
+          ylim=c(0,10+mostappointments),
+          xaxt='n',
           xlab="Patient ID", 
           ylab="# of Appointments",
-          main="# of Appointments per patient")  
-  # legend("topright", 
-  #        fill =c("grey","red"), 
-  #        legend = c("NoShow=No","NoShow=Yes"))
+          main="Appointments per patient")  
+
   
   # Bar Plots ######################
   # Compare NoShow = Yes vs. Noshow = No
