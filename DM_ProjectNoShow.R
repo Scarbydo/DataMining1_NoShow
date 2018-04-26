@@ -29,7 +29,7 @@
   dim(NoShowData)
 
   
-# Data Cleaning
+# Data Cleaning ####
   #Rename columns to more convenient variables
   names(NoShowData) <- list("PatientId","AppointmentId","Gender","ScheduledDay","AppointmentDay","Age","Neighborhood","Scholarship","Hypertension","Diabetes","Alcoholism","Handicap","SmsReceived","NoShow")
   
@@ -89,7 +89,7 @@
   NoShowData <- NoShowData[NoShowData$DaysScheduledAhead >= 0, ]
 
   
-# visualize the data
+# visualize the data ####
   #Create to Data Frame using dplyr
   NoShowData_df <- tbl_df(NoShowData)
   
@@ -128,9 +128,10 @@
           xlab="Patient ID", 
           ylab="# of Appointments",
           main="Appointments per patient")  
-
+  mean(aptsPerPatient)
+  median(aptsPerPatient)
   
-  # Bar Plots ######################
+  # Bar Plots #
   # Compare NoShow = Yes vs. Noshow = No
   plot(NoShowData$Gender, NoShowData$NoShow, xlab='Gender', ylab='No Show?', main='No Shows Based on Gender')
   
@@ -174,9 +175,7 @@
   
     
 
-  
-
-# Splitting the data for training and testing
+# Splitting the data for training and testing ####
   trainSize <- floor(0.75 * nrow(NoShowData))
   set.seed(456)
   trainInds <- sample(seq_len(nrow(NoShowData)), size=trainSize)
@@ -193,7 +192,7 @@
   yTrain <- as.factor(train$NoShow)
   xTest <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
 
-# Define functions to calculate F1 score
+# Define functions to calculate F1 score ####
   # Positive = No, the patient was NOT a no show
   # Negative = Yes, the patient was a no show
   #True Positives
