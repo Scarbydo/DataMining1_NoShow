@@ -195,19 +195,19 @@
 
 # Define functions to calculate F1 score
   TP <- function(predictions, actual) {
-    return(sum((predictions == 'Yes') & (actual == 'Yes')))
-  }
-  
-  TN <- function(predictions, actual) {
     return(sum((predictions == 'No') & (actual == 'No')))
   }
   
+  TN <- function(predictions, actual) {
+    return(sum((predictions == 'Yes') & (actual == 'Yes')))
+  }
+  
   FP <- function(predictions, actual) {
-    return(sum((predictions == 'Yes') & (actual == 'No')))
+    return(sum((predictions == 'No') & (actual == 'Yes')))
   }
   
   FN <- function(predictions, actual) {
-    return(sum((predictions == 'No') & (actual == 'Yes')))
+    return(sum((predictions == 'Yes') & (actual == 'No')))
   }
   
   Recall <- function(predictions, actual) {
@@ -218,6 +218,16 @@
   Precision <- function(predictions, actual) {
     tp <- TP(predictions, actual)
     return(tp/(tp + FP(predictions, actual)))
+  }
+  
+  FNR <- function(predictions, actual) {
+    fn <- FN(predictions, actual)
+    return(fn / (fn + TP(predictions, actual)))
+  }
+  
+  FPR <- function(predictions, actual) {
+    fp <- FP(predictions, actual)
+    return(fp / (fp + TN(predictions, actual)))
   }
   
   F1 <- function(predictions, actual) {
@@ -246,38 +256,9 @@ table(testY, predict_logreg, dnn=c("actual", "predicted"))
 f1_logreg <- F1(predict_logreg, testY)
 
 
-
-############################################################################
-# RIDGE REGRESSION
-library(glmnet)
-model_ridge <- glmnet(xTrain, yTrain, alpha=0, lambda=10^seq(10, -2, length=100), family="binomial")
-cv.ridge <- cv.glmnet(xTrain, yTrain, alpha=0, family="binomial")
-bestRidgeLambda <- cv.ridge$lambda.min
-predict_ridge <- predict(model_ridge, alpha=0, s=bestRidgeLambda, newx=xTest)
-predict_ridge <- cut(predict_ridge, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
-
-# Confusion matrix for ridge regression
-table(testY, predict_ridge, dnn=c("actual", "predicted"))
-# F1 score for ridge regression
-f1_ridge <- F1(predict_ridge, testY)
-
-
-############################################################################
-# LASSO REGRESSION
-model_lasso <- glmnet(xTrain, yTrain, alpha=1, lambda=10^seq(10, -2, length=100), family="binomial")
-cv.lasso <- cv.glmnet(xTrain, yTrain, alpha=1, family="binomial")
-bestLassoLambda <- cv.lasso$lambda.min
-predict_lasso <- predict(model_lasso, alpha=1, s=bestLassoLambda, newx=xTest)
-predict_lasso <- cut(predict_lasso, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
-
-# Confusion matrix for lasso regression
-table(testY, predict_lasso, dnn=c("actual", "predicted"))
-# F1 score for lasso regression
-f1_lasso <- F1(predict_lasso, testY)
-
-
 ############################################################################
 # ELASTIC NET REGRESSION
+library(glmnet)
 elasticF1s <- c()
 for (i in seq(0, 1, by=0.1)) {
   fElasticRegression <- glmnet(xTrain, yTrain, alpha=i, lambda=10^seq(10, -2, length = 100), family='binomial')
@@ -289,9 +270,9 @@ for (i in seq(0, 1, by=0.1)) {
   elasticF1s <- c(elasticF1s, f1)
 }
 
-minElasticF1 <- min(elasticF1s)
-indexOfMinF1 <- match(minElasticF1, elasticF1s)
-elasticAlpha <- seq(0.1,0.9,by=0.1)[indexOfMinF1]
+maxElasticF1 <- max(elasticF1s)
+indexOfMaxF1 <- match(maxElasticF1, elasticF1s)
+elasticAlpha <- seq(0,1,by=0.1)[indexOfMaxF1]
 
 fElasticRegression <- glmnet(xTrain, yTrain, alpha=elasticAlpha, lambda=10^seq(10, -2, length = 100), family='binomial')
 cv.elastic <- cv.glmnet(xTrain, yTrain, alpha=elasticAlpha, family='binomial')
@@ -299,7 +280,20 @@ bestElasticLambda <- cv.elastic$lambda.min
 predict_elastic <- predict(fElasticRegression, alpha=elasticAlpha, s=bestElasticLambda, newx=xTest)
 predict_elastic <- cut(predict_elastic, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
 
+# get coefficients for the best model
+predict(fElasticRegression, type="coefficients", s=bestElasticLambda)
+
+# plot the F1 values for the different alpha values
+plot(seq(0, 1, by=0.1), elasticF1s, xlab='Alpha', ylab='F1', main='Alpha Values vs F1 Scores')
+
 # Confusion matrix for elastic regression
 table(testY, predict_elastic, dnn=c("actual", "predicted"))
 # F1 score for elastic regression
 f1_elastic <- F1(predict_elastic, testY)
+
+
+############################################################################
+# DUMB GUESS
+dumb <- as.factor(rep('No', length(testY)))
+table(dumb, testY)
+f1_dumb <- F1(dumb, testY)
