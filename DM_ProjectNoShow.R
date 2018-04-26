@@ -194,18 +194,24 @@
   xTest <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
 
 # Define functions to calculate F1 score
+  # Positive = No, the patient was NOT a no show
+  # Negative = Yes, the patient was a no show
+  #True Positives
   TP <- function(predictions, actual) {
     return(sum((predictions == 'No') & (actual == 'No')))
   }
   
+  #True Negative
   TN <- function(predictions, actual) {
     return(sum((predictions == 'Yes') & (actual == 'Yes')))
   }
   
+  #False Positive
   FP <- function(predictions, actual) {
     return(sum((predictions == 'No') & (actual == 'Yes')))
   }
   
+  #False Negative
   FN <- function(predictions, actual) {
     return(sum((predictions == 'Yes') & (actual == 'No')))
   }
@@ -220,16 +226,19 @@
     return(tp/(tp + FP(predictions, actual)))
   }
   
+  #False Negative Rate
   FNR <- function(predictions, actual) {
     fn <- FN(predictions, actual)
     return(fn / (fn + TP(predictions, actual)))
   }
   
+  #False Positive Rate
   FPR <- function(predictions, actual) {
     fp <- FP(predictions, actual)
     return(fp / (fp + TN(predictions, actual)))
   }
   
+  #F1 Score
   F1 <- function(predictions, actual) {
     return(2/(1/Recall(predictions, actual) + (1/Precision(predictions, actual))))
   }
