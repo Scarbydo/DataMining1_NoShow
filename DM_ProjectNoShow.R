@@ -139,13 +139,13 @@
        xlab='Alcoholism?', ylab='No Show?', 
        main='No Shows Based on Alcoholism',
        col=chartColors)
-  plot(NoShowData$Handicap, NoShowData$NoShow, 
-       xlab='Degree of Handicap', ylab='No Show?', 
-       main='No Shows Based on Handicap',
-       col=chartColors)
   plot(NoShowData$SmsReceived, NoShowData$NoShow, 
        xlab='SMS Received?', ylab='No Show?', 
        main='No Shows Based on SMS Received',
+       col=chartColors)
+  plot(NoShowData$Handicap, NoShowData$NoShow, 
+       xlab='Degree of Handicap', ylab='No Show?', 
+       main='No Shows Based on Handicap',
        col=chartColors)
   plot(NoShowData$AptWDay, NoShowData$NoShow, 
        xlab='Day of Week (1=Mon, 6=Sat)', ylab='No Show?', 
@@ -175,8 +175,12 @@
           xlab="Patient ID", 
           ylab="# of Appointments",
           main="Appointments per patient")  
+    table(aptsPerPatient>30) #number of patients with more than 30 appointments
   mean(aptsPerPatient)
   median(aptsPerPatient)
+  max(aptsPerPatient) #same as mostappointments
+  head(aptsPerPatient,3) #top 3 appointment makers
+  table(NoShowData[NoShowData$PatientId==822145925426128,]$NoShow)
   
   # Age vs. NoShow rate, Plot 14
   boxplot(NoShowData$Age~ NoShowData$NoShow, 
