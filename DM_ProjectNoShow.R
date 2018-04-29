@@ -95,16 +95,16 @@
   
   # See the counts of our categorical variables
   dataCounts = list()
-  dataCounts$Gender <- table(NoShowData$Gender)
-  dataCounts$Scholarship <- table(NoShowData$Scholarship)
-  dataCounts$Hypertension <- table(NoShowData$Hypertension)
-  dataCounts$Diabetes <- table(NoShowData$Diabetes)
-  dataCounts$Alcoholism <- table(NoShowData$Alcoholism)
-  dataCounts$Handicap <- table(NoShowData$Handicap)
-  dataCounts$SmsReceived <- table(NoShowData$SmsReceived)
-  dataCounts$AptWDay <- table(NoShowData$AptWDay)
-  dataCounts                                
-  
+  dataCounts$Gender <- table(NoShowData$NoShow, NoShowData$Gender)
+  dataCounts$Scholarship <- table(NoShowData$NoShow, NoShowData$Scholarship)
+  dataCounts$Hypertension <- table(NoShowData$NoShow, NoShowData$Hypertension)
+  dataCounts$Diabetes <- table(NoShowData$NoShow, NoShowData$Diabetes)
+  dataCounts$Alcoholism <- table(NoShowData$NoShow, NoShowData$Alcoholism)
+  dataCounts$Handicap <- table(NoShowData$NoShow, NoShowData$Handicap)
+  dataCounts$SmsReceived <- table(NoShowData$NoShow, NoShowData$SmsReceived)
+  dataCounts$AptWDay <- table(NoShowData$NoShow, NoShowData$AptWDay)
+  dataCounts 
+
   # Number of appointments by neighborhood
   #table(NoShowData$NoShow, NoShowData$Neighborhood)
   barplot(table(NoShowData$NoShow, NoShowData$Neighborhood), 
