@@ -40,7 +40,7 @@
   sapply(NoShowData, function(x) length(unique(x)))
 
   # 81 unique neighborhoods. let's factorize it,
-  # along with Gender (F/M) and NoShow (No=1  Yes=2)
+  # along with Gender (F/M) and NoShow (No,  Yes)
   NoShowData$Neighborhood <- as.factor(NoShowData$Neighborhood)
   NoShowData$Gender <- as.factor(NoShowData$Gender)
   NoShowData$NoShow <- as.factor(NoShowData$NoShow)
@@ -69,18 +69,11 @@
   # NoShowData$ScheduledDay <- NULL
   # NoShowData$AppointmentDay <- NULL
   
-  # Check age range to see if it makes sense
-  range(NoShowData$Age)
-  NoShowData[NoShowData$Age < 0, ] #select rows with bad data
-  ## ERROR: At least one age is Negative    
-  ##        Exclude that row.  Example row removal: d<-d[!(d$A=="B" & d$E==0),]
-  NoShowData <- NoShowData[NoShowData$Age >= 0, ]
-  
   # Check Days Scheduled Ahead to see if the values make sense
   table(NoShowData$DaysScheduledAhead[NoShowData$DaysScheduledAhead < 0])
+  badAppointments<-NoShowData[NoShowData$DaysScheduledAhead < 0,]
   ## NOTE: We should consider excluding same-day appointments, ~38k with zero days 
   ##       advance notice.
-  
   NoShowData[NoShowData$DaysScheduledAhead < 0, ] #select rows with bad data
   ## NOTE: selecting < 0 was including zero in the results because it's a doulbe value
   ## ERROR: Some Appointments appear to be scheduled AFTER the appoinment has occurred!  
@@ -88,21 +81,12 @@
   ##        Exclude these any appointment scheduled after the appointment occurred.
   NoShowData <- NoShowData[NoShowData$DaysScheduledAhead >= 0, ]
 
-  
-# visualize the data ####
-  #Create to Data Frame using dplyr
-  #NoShowData_df <- tbl_df(NoShowData)
-  
-  chartColors = c("grey", "red") #Red is for nowshows
-  
-  #patient health characteristics by age to check validity of data
-  barplot(table(NoShowData$Age[NoShowData$Alcoholism==1]), 
-          xlab ='Age', ylab = 'Has Alcoholism')
-  barplot(table(NoShowData$Age[NoShowData$Hypertension==1]),
-          xlab ='Age', ylab = 'Has Hypertension')
-  barplot(table(NoShowData$Age[NoShowData$Diabetes==1]),
-          xlab ='Age', ylab = 'Has Diabetes')
-  
+  # Check age range to see if it makes sense
+  range(NoShowData$Age)
+  NoShowData[NoShowData$Age < 0, ] #select rows with bad data
+  ## ERROR: At least one age is Negative    
+  ##        Exclude that row.  Example row removal: d<-d[!(d$A=="B" & d$E==0),]
+  NoShowData <- NoShowData[NoShowData$Age >= 0, ]
   
   # See the counts of our categorical variables
   dataCounts = list()
@@ -115,7 +99,25 @@
   dataCounts$SmsReceived <- table(NoShowData$NoShow, NoShowData$SmsReceived)
   dataCounts$AptWDay <- table(NoShowData$NoShow, NoShowData$AptWDay)
   dataCounts 
-  #Percentge plots
+  
+  
+# visualize the data ####
+  #Create to Data Frame using dplyr
+  #NoShowData_df <- tbl_df(NoShowData)
+  
+  chartColors = c("grey", "red") #Red is for nowshows
+  
+  #Plots 1-3
+  #patient health characteristics by age to check validity of data
+  barplot(table(NoShowData$Age[NoShowData$Alcoholism==1]), 
+          xlab ='Age', ylab = 'Has Alcoholism')
+  barplot(table(NoShowData$Age[NoShowData$Hypertension==1]),
+          xlab ='Age', ylab = 'Has Hypertension')
+  barplot(table(NoShowData$Age[NoShowData$Diabetes==1]),
+          xlab ='Age', ylab = 'Has Diabetes')
+  
+  
+  #Percentge plots; Plot 4-11
   # Compare NoShow = Yes vs. Noshow = No
   plot(NoShowData$Gender, NoShowData$NoShow, 
        xlab='Gender', ylab='No Show?', 
@@ -138,7 +140,7 @@
        main='No Shows Based on Alcoholism',
        col=chartColors)
   plot(NoShowData$Handicap, NoShowData$NoShow, 
-       xlab='Handicap?', ylab='No Show?', 
+       xlab='Degree of Handicap', ylab='No Show?', 
        main='No Shows Based on Handicap',
        col=chartColors)
   plot(NoShowData$SmsReceived, NoShowData$NoShow, 
@@ -146,11 +148,11 @@
        main='No Shows Based on SMS Received',
        col=chartColors)
   plot(NoShowData$AptWDay, NoShowData$NoShow, 
-       xlab='SMS Received?', ylab='No Show?', 
-       main='No Shows Based on SMS Received',
+       xlab='Day of Week (1=Mon, 6=Sat)', ylab='No Show?', 
+       main='No-shows Based on Day of week',
        col=chartColors)
   
-  # Number of appointments by neighborhood
+  # Number of appointments by neighborhood, Plot 12
   #table(NoShowData$NoShow, NoShowData$Neighborhood)
   barplot(table(NoShowData$NoShow, NoShowData$Neighborhood), 
           ylim=c(0,1000+max(table(NoShowData$Neighborhood))),
@@ -163,7 +165,7 @@
          fill =chartColors, 
          legend = c("NoShow=No","NoShow=Yes"))
   
-  # Number of appointments per patient
+  # Number of appointments per patient, Plot 13
   aptsPerPatient = table(NoShowData$PatientId)
   aptsPerPatient = sort(aptsPerPatient, decreasing = T)
   mostappointments = as.integer(max(table(NoShowData$PatientId)))
@@ -176,28 +178,14 @@
   mean(aptsPerPatient)
   median(aptsPerPatient)
   
-
-  
-  
-  # Box Plots & Histograms: Are NoShows coming from a particular group?
-  barplot(table(NoShowData$Neighborhood))
-  table(NoShowData$Neighborhood[NoShowData$NoShow=='Yes'])
-
-  # Day of week (any day that's bad)
-  table(NoShowData$AptWDay)
-  barplot(NoShowData$AptWDay, NoShowData$NoShow, 
-          xlab="NoShow",
-          ylab='Appointment Day', 
-          main='Trend of NoShows by Day of Week') 
-  
-  # Age vs. NoShow rate
+  # Age vs. NoShow rate, Plot 14
   boxplot(NoShowData$Age~ NoShowData$NoShow, 
           xlab="NoShow",
           ylab='Patient Age', 
           main='Trend of NoShows by Patient Age')
 
-  # DaysScheduledAhead vs. NoShow rate
-  hist(as.integer(NoShowData[NoShowData$NoShow=='No',]$DaysScheduledAhead), breaks = 130)
+  # DaysScheduledAhead vs. NoShow rate, Plot 15
+  #hist(as.integer(NoShowData[NoShowData$NoShow=='No',]$DaysScheduledAhead), breaks = 130)
   boxplot(as.integer(NoShowData$DaysScheduledAhead)~NoShowData$NoShow, 
           xlab="NoShow",
           ylab='Days Appointment Scheduled In Advance', 
