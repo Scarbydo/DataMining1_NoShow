@@ -95,6 +95,15 @@
   
   chartColors = c("grey", "red") #Red is for nowshows
   
+  #patient health characteristics by age to check validity of data
+  barplot(table(NoShowData$Age[NoShowData$Alcoholism==1]), 
+          xlab ='Age', ylab = 'Has Alcoholism')
+  barplot(table(NoShowData$Age[NoShowData$Hypertension==1]),
+          xlab ='Age', ylab = 'Has Hypertension')
+  barplot(table(NoShowData$Age[NoShowData$Diabetes==1]),
+          xlab ='Age', ylab = 'Has Diabetes')
+  
+  
   # See the counts of our categorical variables
   dataCounts = list()
   dataCounts$Gender <- table(NoShowData$NoShow, NoShowData$Gender)
@@ -136,7 +145,6 @@
        xlab='SMS Received?', ylab='No Show?', 
        main='No Shows Based on SMS Received',
        col=chartColors)
-  weekDayNames <- c()
   plot(NoShowData$AptWDay, NoShowData$NoShow, 
        xlab='SMS Received?', ylab='No Show?', 
        main='No Shows Based on SMS Received',
@@ -265,8 +273,8 @@
   }
   
 
-############################################################################
-# LOGISTIC REGRESSION
+
+# LOGISTIC REGRESSION ############################################################################
 model_logreg <- glm(NoShow~., data=train, family=binomial(link='logit'))
 summary(model_logreg)
 
@@ -286,8 +294,8 @@ table(testY, predict_logreg, dnn=c("actual", "predicted"))
 f1_logreg <- F1(predict_logreg, testY)
 
 
-############################################################################
-# ELASTIC NET REGRESSION
+
+# ELASTIC NET REGRESSION ############################################################################
 library(glmnet)
 elasticF1s <- c()
 for (i in seq(0, 1, by=0.1)) {
@@ -322,8 +330,8 @@ table(testY, predict_elastic, dnn=c("actual", "predicted"))
 f1_elastic <- F1(predict_elastic, testY)
 
 
-############################################################################
-# DUMB GUESS
+
+# DUMB GUESS ############################################################################
 dumb <- as.factor(rep('No', length(testY)))
 table(dumb, testY)
 f1_dumb <- F1(dumb, testY)
