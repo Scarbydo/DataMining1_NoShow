@@ -91,7 +91,9 @@
   
 # visualize the data ####
   #Create to Data Frame using dplyr
-  NoShowData_df <- tbl_df(NoShowData)
+  #NoShowData_df <- tbl_df(NoShowData)
+  
+  chartColors = c("grey", "red") #Red is for nowshows
   
   # See the counts of our categorical variables
   dataCounts = list()
@@ -104,7 +106,42 @@
   dataCounts$SmsReceived <- table(NoShowData$NoShow, NoShowData$SmsReceived)
   dataCounts$AptWDay <- table(NoShowData$NoShow, NoShowData$AptWDay)
   dataCounts 
-
+  #Percentge plots
+  # Compare NoShow = Yes vs. Noshow = No
+  plot(NoShowData$Gender, NoShowData$NoShow, 
+       xlab='Gender', ylab='No Show?', 
+       main='No Shows Based on Gender',
+       col=chartColors)
+  plot(NoShowData$Scholarship, NoShowData$NoShow, 
+       xlab='Scholarship?', ylab='No Show?', 
+       main='No Shows Based on Scholarship',
+       col=chartColors)
+  plot(NoShowData$Hypertension, NoShowData$NoShow, 
+       xlab='Hypertension?', ylab='No Show?', 
+       main='No Shows Based on Hypertension',
+       col=chartColors)
+  plot(NoShowData$Diabetes, NoShowData$NoShow, 
+       xlab='Diabetes?', ylab='No Show?', 
+       main='No Shows Based on Diabetes',
+       col=chartColors)
+  plot(NoShowData$Alcoholism, NoShowData$NoShow, 
+       xlab='Alcoholism?', ylab='No Show?', 
+       main='No Shows Based on Alcoholism',
+       col=chartColors)
+  plot(NoShowData$Handicap, NoShowData$NoShow, 
+       xlab='Handicap?', ylab='No Show?', 
+       main='No Shows Based on Handicap',
+       col=chartColors)
+  plot(NoShowData$SmsReceived, NoShowData$NoShow, 
+       xlab='SMS Received?', ylab='No Show?', 
+       main='No Shows Based on SMS Received',
+       col=chartColors)
+  weekDayNames <- c()
+  plot(NoShowData$AptWDay, NoShowData$NoShow, 
+       xlab='SMS Received?', ylab='No Show?', 
+       main='No Shows Based on SMS Received',
+       col=chartColors)
+  
   # Number of appointments by neighborhood
   #table(NoShowData$NoShow, NoShowData$Neighborhood)
   barplot(table(NoShowData$NoShow, NoShowData$Neighborhood), 
@@ -115,7 +152,7 @@
           col=c("grey","red"),
           ylab="# of Appointments") #las = rotation of x labels, cex = fontsize, space = dist btw cols
   legend("topright", 
-         fill =c("grey","red"), 
+         fill =chartColors, 
          legend = c("NoShow=No","NoShow=Yes"))
   
   # Number of appointments per patient
@@ -131,22 +168,7 @@
   mean(aptsPerPatient)
   median(aptsPerPatient)
   
-  # Bar Plots #
-  # Compare NoShow = Yes vs. Noshow = No
-  plot(NoShowData$Gender, NoShowData$NoShow, xlab='Gender', ylab='No Show?', main='No Shows Based on Gender')
-  
-  ## JUSTIN: These plots are not very effictive.  Maybe a histogram or boxplot of noshows by Days Scheduled Ahead is better
-  plot(NoShowData$DaysScheduledAhead, NoShowData$NoShow, yaxt='n', ylim=c(0.5,2.5), xlab='Days Scheduled Ahead', ylab='No Show?', main='No Shows Based on Advanced Schedule Days')
-  axis(2, at=c(1,2), labels=c('No','Yes'))
-  plot(NoShowData$Age, NoShowData$NoShow, yaxt='n', ylim=c(0.5,2.5), xlab='Patient Age', ylab='No Show?', main='No Shows Based on Age')
-  axis(2, at=c(1,2), labels=c('No','Yes'))
 
-  plot(NoShowData$Scholarship, NoShowData$NoShow, xlab='Scholarship?', ylab='No Show?', main='No Shows Based on Scholarship')
-  plot(NoShowData$Hypertension, NoShowData$NoShow, xlab='Hypertension?', ylab='No Show?', main='No Shows Based on Hypertension')
-  plot(NoShowData$Diabetes, NoShowData$NoShow, xlab='Diabetes?', ylab='No Show?', main='No Shows Based on Diabetes')
-  plot(NoShowData$Alcoholism, NoShowData$NoShow, xlab='Alcoholism?', ylab='No Show?', main='No Shows Based on Alcoholism')
-  plot(NoShowData$Handicap, NoShowData$NoShow, xlab='Handicap?', ylab='No Show?', main='No Shows Based on Handicap')
-  plot(NoShowData$SmsReceived, NoShowData$NoShow, xlab='SMS Received?', ylab='No Show?', main='No Shows Based on SMS Received')
   
   
   # Box Plots & Histograms: Are NoShows coming from a particular group?
