@@ -206,9 +206,9 @@
   testY <- test[[yColInd]]
 
   # different format for the glmnet models
-  xTrain <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=train)
+  xTrain <- model.matrix(NoShow~PatientId+Gender+ScheduledDay+AppointmentDay+Age+Neighborhood+Scholarship+Hypertension+Diabetes+Alcoholism+Handicap+SmsReceived+DaysScheduledAhead+AptWDay, data=train)
   yTrain <- as.factor(train$NoShow)
-  xTest <- model.matrix(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
+  xTest <- model.matrix(NoShow~PatientId+Gender+ScheduledDay+AppointmentDay+Age+Neighborhood+Scholarship+Hypertension+Diabetes+Alcoholism+Handicap+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
 
 # Define functions to calculate F1 score ####
   # Positive = No, the patient was NOT a no show
@@ -268,10 +268,11 @@ summary(model_logreg)
 
 # based on the results from the summary above, we select only significant predictors
 model_logreg <- glm(NoShow~Age+Scholarship+Hypertension+Diabetes+Alcoholism+SmsReceived+DaysScheduledAhead+AptWDay, data=train, family=binomial(link='logit'))
-# what do these plots tell us?
-plot(model_logreg)
+summary(model_logreg)
 
 predict_logreg <- predict(model_logreg, testX, type="response")
+plot(sort(predict_logreg), ylab="Prediction", main="Predicted Values in Test Set")
+lines(1:length(predict_logreg), rep(0.5, length(predict_logreg)), col="green")
 
 # see how the logist regression performed
 predict_logreg <- cut(predict_logreg, breaks=c(-Inf, 0.5, Inf), labels=c('No', 'Yes'))
