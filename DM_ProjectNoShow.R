@@ -29,7 +29,7 @@
   dim(NoShowData)
 
   
-# Data Cleaning
+# Data Cleaning ####
   #Rename columns to more convenient variables
   names(NoShowData) <- list("PatientId","AppointmentId","Gender","ScheduledDay","AppointmentDay","Age","Neighborhood","Scholarship","Hypertension","Diabetes","Alcoholism","Handicap","SmsReceived","NoShow")
   
@@ -89,21 +89,66 @@
   NoShowData <- NoShowData[NoShowData$DaysScheduledAhead >= 0, ]
 
   
-# visualize the data
+# visualize the data ####
   #Create to Data Frame using dplyr
-  NoShowData_df <- tbl_df(NoShowData)
+  #NoShowData_df <- tbl_df(NoShowData)
+  
+  chartColors = c("grey", "red") #Red is for nowshows
+  
+  #patient health characteristics by age to check validity of data
+  barplot(table(NoShowData$Age[NoShowData$Alcoholism==1]), 
+          xlab ='Age', ylab = 'Has Alcoholism')
+  barplot(table(NoShowData$Age[NoShowData$Hypertension==1]),
+          xlab ='Age', ylab = 'Has Hypertension')
+  barplot(table(NoShowData$Age[NoShowData$Diabetes==1]),
+          xlab ='Age', ylab = 'Has Diabetes')
+  
   
   # See the counts of our categorical variables
   dataCounts = list()
-  dataCounts$Gender <- table(NoShowData$Gender)
-  dataCounts$Scholarship <- table(NoShowData$Scholarship)
-  dataCounts$Hypertension <- table(NoShowData$Hypertension)
-  dataCounts$Diabetes <- table(NoShowData$Diabetes)
-  dataCounts$Alcoholism <- table(NoShowData$Alcoholism)
-  dataCounts$Handicap <- table(NoShowData$Handicap)
-  dataCounts$SmsReceived <- table(NoShowData$SmsReceived)
-  dataCounts$AptWDay <- table(NoShowData$AptWDay)
-  dataCounts                                
+  dataCounts$Gender <- table(NoShowData$NoShow, NoShowData$Gender)
+  dataCounts$Scholarship <- table(NoShowData$NoShow, NoShowData$Scholarship)
+  dataCounts$Hypertension <- table(NoShowData$NoShow, NoShowData$Hypertension)
+  dataCounts$Diabetes <- table(NoShowData$NoShow, NoShowData$Diabetes)
+  dataCounts$Alcoholism <- table(NoShowData$NoShow, NoShowData$Alcoholism)
+  dataCounts$Handicap <- table(NoShowData$NoShow, NoShowData$Handicap)
+  dataCounts$SmsReceived <- table(NoShowData$NoShow, NoShowData$SmsReceived)
+  dataCounts$AptWDay <- table(NoShowData$NoShow, NoShowData$AptWDay)
+  dataCounts 
+  #Percentge plots
+  # Compare NoShow = Yes vs. Noshow = No
+  plot(NoShowData$Gender, NoShowData$NoShow, 
+       xlab='Gender', ylab='No Show?', 
+       main='No Shows Based on Gender',
+       col=chartColors)
+  plot(NoShowData$Scholarship, NoShowData$NoShow, 
+       xlab='Scholarship?', ylab='No Show?', 
+       main='No Shows Based on Scholarship',
+       col=chartColors)
+  plot(NoShowData$Hypertension, NoShowData$NoShow, 
+       xlab='Hypertension?', ylab='No Show?', 
+       main='No Shows Based on Hypertension',
+       col=chartColors)
+  plot(NoShowData$Diabetes, NoShowData$NoShow, 
+       xlab='Diabetes?', ylab='No Show?', 
+       main='No Shows Based on Diabetes',
+       col=chartColors)
+  plot(NoShowData$Alcoholism, NoShowData$NoShow, 
+       xlab='Alcoholism?', ylab='No Show?', 
+       main='No Shows Based on Alcoholism',
+       col=chartColors)
+  plot(NoShowData$Handicap, NoShowData$NoShow, 
+       xlab='Handicap?', ylab='No Show?', 
+       main='No Shows Based on Handicap',
+       col=chartColors)
+  plot(NoShowData$SmsReceived, NoShowData$NoShow, 
+       xlab='SMS Received?', ylab='No Show?', 
+       main='No Shows Based on SMS Received',
+       col=chartColors)
+  plot(NoShowData$AptWDay, NoShowData$NoShow, 
+       xlab='SMS Received?', ylab='No Show?', 
+       main='No Shows Based on SMS Received',
+       col=chartColors)
   
   # Number of appointments by neighborhood
   #table(NoShowData$NoShow, NoShowData$Neighborhood)
@@ -115,37 +160,23 @@
           col=c("grey","red"),
           ylab="# of Appointments") #las = rotation of x labels, cex = fontsize, space = dist btw cols
   legend("topright", 
-         fill =c("grey","red"), 
+         fill =chartColors, 
          legend = c("NoShow=No","NoShow=Yes"))
   
   # Number of appointments per patient
-  aptsPerPatient = table(NoShowData$NoShow, NoShowData$PatientId)
-  barplot(table(NoShowData$NoShow, NoShowData$PatientId), 
-          ylim=c(0,10+max(table(NoShowData$PatientId))),
-          las=2,
+  aptsPerPatient = table(NoShowData$PatientId)
+  aptsPerPatient = sort(aptsPerPatient, decreasing = T)
+  mostappointments = as.integer(max(table(NoShowData$PatientId)))
+  barplot(aptsPerPatient, 
+          ylim=c(0,10+mostappointments),
+          xaxt='n',
           xlab="Patient ID", 
           ylab="# of Appointments",
-          main="# of Appointments per patient")  
-  # legend("topright", 
-  #        fill =c("grey","red"), 
-  #        legend = c("NoShow=No","NoShow=Yes"))
+          main="Appointments per patient")  
+  mean(aptsPerPatient)
+  median(aptsPerPatient)
   
-  # Bar Plots ######################
-  # Compare NoShow = Yes vs. Noshow = No
-  plot(NoShowData$Gender, NoShowData$NoShow, xlab='Gender', ylab='No Show?', main='No Shows Based on Gender')
-  
-  ## JUSTIN: These plots are not very effictive.  Maybe a histogram or boxplot of noshows by Days Scheduled Ahead is better
-  plot(NoShowData$DaysScheduledAhead, NoShowData$NoShow, yaxt='n', ylim=c(0.5,2.5), xlab='Days Scheduled Ahead', ylab='No Show?', main='No Shows Based on Advanced Schedule Days')
-  axis(2, at=c(1,2), labels=c('No','Yes'))
-  plot(NoShowData$Age, NoShowData$NoShow, yaxt='n', ylim=c(0.5,2.5), xlab='Patient Age', ylab='No Show?', main='No Shows Based on Age')
-  axis(2, at=c(1,2), labels=c('No','Yes'))
 
-  plot(NoShowData$Scholarship, NoShowData$NoShow, xlab='Scholarship?', ylab='No Show?', main='No Shows Based on Scholarship')
-  plot(NoShowData$Hypertension, NoShowData$NoShow, xlab='Hypertension?', ylab='No Show?', main='No Shows Based on Hypertension')
-  plot(NoShowData$Diabetes, NoShowData$NoShow, xlab='Diabetes?', ylab='No Show?', main='No Shows Based on Diabetes')
-  plot(NoShowData$Alcoholism, NoShowData$NoShow, xlab='Alcoholism?', ylab='No Show?', main='No Shows Based on Alcoholism')
-  plot(NoShowData$Handicap, NoShowData$NoShow, xlab='Handicap?', ylab='No Show?', main='No Shows Based on Handicap')
-  plot(NoShowData$SmsReceived, NoShowData$NoShow, xlab='SMS Received?', ylab='No Show?', main='No Shows Based on SMS Received')
   
   
   # Box Plots & Histograms: Are NoShows coming from a particular group?
@@ -174,9 +205,7 @@
   
     
 
-  
-
-# Splitting the data for training and testing
+# Splitting the data for training and testing ####
   trainSize <- floor(0.75 * nrow(NoShowData))
   set.seed(456)
   trainInds <- sample(seq_len(nrow(NoShowData)), size=trainSize)
@@ -193,19 +222,25 @@
   yTrain <- as.factor(train$NoShow)
   xTest <- model.matrix(NoShow~PatientId+Gender+ScheduledDay+AppointmentDay+Age+Neighborhood+Scholarship+Hypertension+Diabetes+Alcoholism+Handicap+SmsReceived+DaysScheduledAhead+AptWDay, data=test)
 
-# Define functions to calculate F1 score
+# Define functions to calculate F1 score ####
+  # Positive = No, the patient was NOT a no show
+  # Negative = Yes, the patient was a no show
+  #True Positives
   TP <- function(predictions, actual) {
     return(sum((predictions == 'No') & (actual == 'No')))
   }
   
+  #True Negative
   TN <- function(predictions, actual) {
     return(sum((predictions == 'Yes') & (actual == 'Yes')))
   }
   
+  #False Positive
   FP <- function(predictions, actual) {
     return(sum((predictions == 'No') & (actual == 'Yes')))
   }
   
+  #False Negative
   FN <- function(predictions, actual) {
     return(sum((predictions == 'Yes') & (actual == 'No')))
   }
@@ -220,23 +255,26 @@
     return(tp/(tp + FP(predictions, actual)))
   }
   
+  #False Negative Rate
   FNR <- function(predictions, actual) {
     fn <- FN(predictions, actual)
     return(fn / (fn + TP(predictions, actual)))
   }
   
+  #False Positive Rate
   FPR <- function(predictions, actual) {
     fp <- FP(predictions, actual)
     return(fp / (fp + TN(predictions, actual)))
   }
   
+  #F1 Score
   F1 <- function(predictions, actual) {
     return(2/(1/Recall(predictions, actual) + (1/Precision(predictions, actual))))
   }
   
 
-############################################################################
-# LOGISTIC REGRESSION
+
+# LOGISTIC REGRESSION ############################################################################
 model_logreg <- glm(NoShow~., data=train, family=binomial(link='logit'))
 summary(model_logreg)
 
@@ -257,8 +295,8 @@ table(testY, predict_logreg, dnn=c("actual", "predicted"))
 f1_logreg <- F1(predict_logreg, testY)
 
 
-############################################################################
-# ELASTIC NET REGRESSION
+
+# ELASTIC NET REGRESSION ############################################################################
 library(glmnet)
 elasticF1s <- c()
 for (i in seq(0, 1, by=0.1)) {
@@ -293,8 +331,8 @@ table(testY, predict_elastic, dnn=c("actual", "predicted"))
 f1_elastic <- F1(predict_elastic, testY)
 
 
-############################################################################
-# DUMB GUESS
+
+# DUMB GUESS ############################################################################
 dumb <- as.factor(rep('No', length(testY)))
 table(dumb, testY)
 f1_dumb <- F1(dumb, testY)
